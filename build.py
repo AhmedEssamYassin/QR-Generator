@@ -26,6 +26,12 @@ def cleanBuildDirs():
     for directory in [DIST_DIR, BUILD_DIR]:
         if directory.exists():
             shutil.rmtree(directory)
+    # Clean spec file
+    specFile = PROJECT_ROOT / f"{APP_NAME}.spec"
+    if specFile.exists():
+        specFile.unlink() # Deletes the file
+        print(f"Deleted spec file: {specFile}")
+
     print("Build directories cleaned")
 
 
@@ -224,7 +230,7 @@ def main():
             return
         
         print("\n" + "=" * 60)
-        print("🎉 Build process completed successfully!")
+        print("Build process completed successfully!")
         print("=" * 60)
         
     except KeyboardInterrupt:
