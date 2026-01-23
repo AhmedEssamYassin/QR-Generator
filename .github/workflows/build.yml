@@ -1,0 +1,60 @@
+name: Build QR Generator
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11' 
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        
+        # Install qrcode[pil] explicitly (critical for build.py)
+        pip install "qrcode[pil]" wheel
+        
+        # Install project requirements
+        if (Test-Path "QR-Generator/requirements.txt") {
+          pip install -r QR-Generator/requirements.txt
+        }
+      shell: pwsh
+
+    - name: Build Executable (One Directory)
+      run: |
+        cd QR-Generator
+        echo "2" | python build.py
+      shell: cmd 
+      # "echo 2" selects "One Directory" mode, faster startup
+
+    - name: Verify Build
+      run: |
+        # Check if the exe exists inside the output folder
+        $exePath = "QR-Generator/dist/QRCodeGeneratorPro/QRCodeGeneratorPro.exe"
+        if (Test-Path $exePath) {
+          Write-Host "Build Success: Found executable at $exePath"
+        } else {
+          Write-Host "Build Failed: Executable not found!"
+          exit 1
+        }
+      shell: pwsh
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: QRCodeGeneratorPro-Portable
+        # Uploads the entire folder. GitHub will zip it automatically.
+        path: QR-Generator/dist/QRCodeGeneratorPro/
+        if-no-files-found: error
