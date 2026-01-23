@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 import customtkinter as ctk
 import logging
@@ -23,12 +24,27 @@ class QRGeneratorView(ctk.CTk):
         
         # Window setup
         self.title("QR Code Generator Pro")
-        self.geometry("1000x700")
+
+        # Center the window
+        self._centerWindow(1000, 700)
         self.minsize(900, 600)
+
+        # --- Icon Setup ---
+        try:
+            iconPath = os.path.join("assets", "images", "icon.ico")
+            
+            if os.path.exists(iconPath):
+                self.iconbitmap(iconPath)
+            else:                
+                logger.warning(f"Icon not found at: {iconPath}")
+                
+        except Exception as e:
+            logger.warning(f"Could not load icon: {e}")
+        # -----------------------
         
         # Apply theme
-        theme = self.settingsService.get("theme", "dark")
-        ctk.set_appearance_mode(theme)
+        theme = self.settingsService.get("theme", "light")
+        self.applyTheme(theme)
         ctk.set_default_color_theme("blue")
         
         # Variables
@@ -46,6 +62,19 @@ class QRGeneratorView(ctk.CTk):
         
         logger.info("Main window initialized")
     
+    def _centerWindow(self, width: int, height: int) -> None:
+        """Center the window on the screen"""
+        # Get screen dimensions
+        screenWidth = self.winfo_screenwidth()
+        screenHeight = self.winfo_screenheight()
+        
+        # Calculate x and y coordinates
+        x = (screenWidth - width) // 2
+        y = (screenHeight - height) // 2
+        
+        # Set geometry
+        self.geometry(f"{width}x{height}+{x}+{y}")
+
     def _createLayout(self) -> None:
         """Create main layout"""
         # Configure grid
@@ -54,8 +83,7 @@ class QRGeneratorView(ctk.CTk):
         self.grid_rowconfigure(0, weight=1)
         
         # Left panel - Controls
-        # Changed to ScrollableFrame to allow entire side panel to scroll
-        leftPanel = ctk.CTkScrollableFrame(self, corner_radius=0)
+        leftPanel = ctk.CTkFrame(self, corner_radius=0)
         leftPanel.grid(row=0, column=0, sticky="nsew", padx=(0, 1))
         
         # Right panel - Preview
@@ -114,10 +142,6 @@ class QRGeneratorView(ctk.CTk):
         )
         self.copyBtn.pack(side="left")
     
-    def applyTheme(self, themeName: str) -> None:
-        """Apply the specified theme"""
-        ctk.set_appearance_mode(themeName)
-
     def _bindShortcuts(self) -> None:
         """Bind keyboard shortcuts"""
         self.bind("<Control-g>", lambda e: self.controller.generateQr())
@@ -152,3 +176,7 @@ class QRGeneratorView(ctk.CTk):
     def updateColorButton(self, buttonType: str, color: str) -> None:
         """Update color button appearance"""
         self.settingsPanel.updateColorButton(buttonType, color)
+
+    def applyTheme(self, themeName: str) -> None:
+        """Apply the specified theme"""
+        ctk.set_appearance_mode(themeName)
