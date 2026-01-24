@@ -1,11 +1,22 @@
 import sys
 import logging
+import os, platform
 from pathlib import Path
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
+
+# --- SETUP LOGGING PATH ---
+if platform.system() == "Windows":
+    BASE_DIR = os.getenv('APPDATA')
+else:
+    BASE_DIR = os.path.expanduser("~/.config")
+
+APP_DIR = os.path.join(BASE_DIR, "QRGeneratorPro")
+os.makedirs(APP_DIR, exist_ok=True)
+logFile = os.path.join(APP_DIR, 'qr_generator.log')
 
 from ui.main_window import QRGeneratorView
 from core.controller import QRGeneratorController
@@ -17,7 +28,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('qr_generator.log'),
+        logging.FileHandler(logFile),
         logging.StreamHandler()
     ]
 )

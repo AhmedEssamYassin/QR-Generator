@@ -1,4 +1,5 @@
 import os
+import sys
 import tkinter as tk
 import customtkinter as ctk
 import logging
@@ -12,6 +13,15 @@ from ui.preview_panel import PreviewPanel
 
 logger = logging.getLogger(__name__)
 
+def resourcePath(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 class QRGeneratorView(ctk.CTk):
     """Main application window"""
@@ -31,7 +41,8 @@ class QRGeneratorView(ctk.CTk):
 
         # --- Icon Setup ---
         try:
-            iconPath = os.path.join("assets", "images", "icon.ico")
+            # Use resourcePath to find the icon inside the EXE bundle
+            iconPath = resourcePath(os.path.join("assets", "images", "icon.ico"))
             
             if os.path.exists(iconPath):
                 self.iconbitmap(iconPath)

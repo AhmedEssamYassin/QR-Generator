@@ -17,6 +17,9 @@ DIST_DIR = PROJECT_ROOT / "dist"
 BUILD_DIR = PROJECT_ROOT / "build"
 ASSETS_DIR = PROJECT_ROOT / "assets"
 
+# Ensure this points to the exact location of your icon
+ICON_PATH = ASSETS_DIR / "images" / "icon.ico"
+
 QRCODE_PATH = os.path.dirname(qrcode.__file__)
 print(f"Found qrcode library at: {QRCODE_PATH}")
 
@@ -26,10 +29,11 @@ def cleanBuildDirs():
     for directory in [DIST_DIR, BUILD_DIR]:
         if directory.exists():
             shutil.rmtree(directory)
+            
     # Clean spec file
     specFile = PROJECT_ROOT / f"{APP_NAME}.spec"
     if specFile.exists():
-        specFile.unlink() # Deletes the file
+        specFile.unlink()
         print(f"Deleted spec file: {specFile}")
 
     print("Build directories cleaned")
@@ -37,13 +41,19 @@ def cleanBuildDirs():
 
 def createSpecFile():
     """Create PyInstaller spec file"""
+    # Define source path
+    SRC_PATH = PROJECT_ROOT / "src"
+    
+    # Handle icon path for spec file (escape backslashes for Windows)
+    iconStr = str(ICON_PATH).replace('\\', '\\\\') if ICON_PATH.exists() else 'None'
+    
     specContent = f'''# -*- mode: python ; coding: utf-8 -*-
 
 block_cipher = None
 
 a = Analysis(
     ['main.py'],
-    pathex=[],
+    pathex=[r'{str(SRC_PATH)}'],
     binaries=[],
     datas=[
         ('assets', 'assets'),
@@ -87,7 +97,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='assets/icon.ico' if os.path.exists('assets/icon.ico') else None,
+    icon=r'{iconStr}',
 )
 '''
     
@@ -124,6 +134,7 @@ def buildOnefile():
         '--windowed',
         '--clean',
         '--noconfirm',
+        f'--paths={PROJECT_ROOT / "src"}',
         f'--distpath={DIST_DIR}',
         f'--workpath={BUILD_DIR}',
         '--add-data', f'assets{os.pathsep}assets',
@@ -134,11 +145,13 @@ def buildOnefile():
         '--hidden-import', 'qrcode',
         '--hidden-import', 'qrcode.image.styles.moduledrawers',
     ]
-    
+
     # Add icon if exists
-    iconPath = ASSETS_DIR / "icon.ico"
-    if iconPath.exists():
-        args.extend(['--icon', str(iconPath)])
+    if ICON_PATH.exists():
+        print(f"Using icon: {ICON_PATH}")
+        args.extend(['--icon', str(ICON_PATH)])
+    else:
+        print(f"WARNING: Icon not found at {ICON_PATH}")
     
     PyInstaller.__main__.run(args)
     
@@ -157,6 +170,7 @@ def buildOnedir():
         '--windowed',
         '--clean',
         '--noconfirm',
+        f'--paths={PROJECT_ROOT / "src"}',
         f'--distpath={DIST_DIR}',
         f'--workpath={BUILD_DIR}',
         '--add-data', f'assets{os.pathsep}assets',
@@ -169,9 +183,11 @@ def buildOnedir():
     ]
     
     # Add icon if exists
-    iconPath = ASSETS_DIR / "icon.ico"
-    if iconPath.exists():
-        args.extend(['--icon', str(iconPath)])
+    if ICON_PATH.exists():
+        print(f"Using icon: {ICON_PATH}")
+        args.extend(['--icon', str(ICON_PATH)])
+    else:
+        print(f"WARNING: Icon not found at {ICON_PATH}")
     
     PyInstaller.__main__.run(args)
     
@@ -210,7 +226,9 @@ def main():
             return
         
         # Create assets directory if it doesn't exist
+        # We also check if the images subdirectory exists
         ASSETS_DIR.mkdir(exist_ok=True)
+        (ASSETS_DIR / "images").mkdir(exist_ok=True)
         
         if choice == "1":
             cleanBuildDirs()
