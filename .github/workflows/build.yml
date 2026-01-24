@@ -18,6 +18,8 @@ jobs:
       with:
         python-version: '3.11' 
         cache: 'pip'
+        # Pointing to requirements.txt in the root
+        cache-dependency-path: requirements.txt
 
     - name: Install dependencies
       run: |
@@ -26,27 +28,25 @@ jobs:
         # Install qrcode[pil] explicitly (critical for build.py)
         pip install "qrcode[pil]" wheel
         
-        # Install project requirements
-        if (Test-Path "QR-Generator/requirements.txt") {
-          pip install -r QR-Generator/requirements.txt
+        # Install project requirements from root
+        if (Test-Path "requirements.txt") {
+          pip install -r requirements.txt
         }
       shell: pwsh
 
     - name: Build Executable (One Directory)
-      run: |
-        cd QR-Generator
-        echo "2" | python build.py
+      # Run build.py from the root. "echo 2" selects Option 2 automatically.
+      run: echo "2" | python build.py
       shell: cmd 
-      # "echo 2" selects "One Directory" mode, faster startup
 
     - name: Verify Build
       run: |
-        # Check if the exe exists inside the output folder
-        $exePath = "QR-Generator/dist/QRCodeGeneratorPro/QRCodeGeneratorPro.exe"
+        # Check if the exe exists inside the dist folder in root
+        $exePath = "dist/QRCodeGeneratorPro/QRCodeGeneratorPro.exe"
         if (Test-Path $exePath) {
           Write-Host "Build Success: Found executable at $exePath"
         } else {
-          Write-Host "Build Failed: Executable not found!"
+          Write-Host "Build Failed: Executable not found at $exePath"
           exit 1
         }
       shell: pwsh
@@ -55,6 +55,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: QRCodeGeneratorPro-Portable
-        # Uploads the entire folder. GitHub will zip it automatically.
-        path: QR-Generator/dist/QRCodeGeneratorPro/
+        # Upload the dist folder from root
+        path: dist/QRCodeGeneratorPro/
         if-no-files-found: error
