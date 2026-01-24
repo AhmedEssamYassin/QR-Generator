@@ -1,6 +1,6 @@
 import json
 import logging
-import os
+import os, platform
 from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,21 @@ class SettingsService:
     }
     
     def __init__(self, configFile: str = "qr_config.json"):
-        self.configFile = configFile
+        # 1. Determine system-specific user data directory
+        if platform.system() == "Windows":
+            base_dir = os.getenv('APPDATA')  # e.g., C:\Users\Name\AppData\Roaming
+        else:
+            # Linux/Mac standard
+            base_dir = os.path.expanduser("~/.config")
+            
+        # 2. Create the application folder if it doesn't exist
+        self.app_dir = os.path.join(base_dir, "QRGeneratorPro")
+        os.makedirs(self.app_dir, exist_ok=True)
+        
+        # 3. Set the full path
+        self.configFile = os.path.join(self.app_dir, configFile)
+        
+        # 4. Load settings
         self.settings: Dict[str, Any] = self._load()
     
     def _load(self) -> Dict[str, Any]:
