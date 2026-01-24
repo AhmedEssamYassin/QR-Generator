@@ -37,7 +37,7 @@ jobs:
     - name: Build Executable (One Directory)
       # Run build.py from the root. "echo 2" selects Option 2 automatically.
       run: echo "2" | python build.py
-      shell: cmd 
+      shell: pwsh
 
     - name: Verify Build
       run: |
