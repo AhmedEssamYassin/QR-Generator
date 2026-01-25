@@ -28,6 +28,11 @@ A professional, feature-rich QR Code Generator desktop application built with Py
   - **Clipboard**: Copy generated QR codes directly to clipboard
   - **Export**: Save as PNG, JPG, BMP, or GIF
 
+## Architecture Overview
+
+### System Design (UML Diagram)
+![UML Diagram](./docs/system%20design%20UML.svg)
+
 ## Installation
 
 1. **Clone the repository**
