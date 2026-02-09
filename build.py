@@ -4,6 +4,9 @@ import shutil
 import sys
 from pathlib import Path
 import qrcode
+import update_deps
+
+update_deps.updateAllDeps()    
 
 # Project configuration
 APP_NAME = "QRCodeGeneratorPro"
@@ -215,41 +218,42 @@ def showMenu():
 def main():
     """Main build process"""
     try:
-        choice = showMenu()
-        
-        if choice == "0":
-            print("Exiting...")
+        while(True):
+            choice = showMenu()
+            
+            if choice == "0":
+                print("Exiting...")
+                return
+            
+            if choice == "4":
+                cleanBuildDirs()
+                continue
+            
+            # Create assets directory if it doesn't exist
+            # We also check if the images subdirectory exists
+            ASSETS_DIR.mkdir(exist_ok=True)
+            (ASSETS_DIR / "images").mkdir(exist_ok=True)
+            
+            if choice == "1":
+                cleanBuildDirs()
+                buildOnefile()
+            
+            elif choice == "2":
+                cleanBuildDirs()
+                buildOnedir()
+                        
+            elif choice == "3":
+                cleanBuildDirs()
+                specFile = createSpecFile()
+                buildExecutable(specFile)
+            else:
+                print("Invalid option")
+                return
+            
+            print("\n" + "=" * 60)
+            print("Build process completed successfully!")
+            print("=" * 60)
             return
-        
-        if choice == "4":
-            cleanBuildDirs()
-            return
-        
-        # Create assets directory if it doesn't exist
-        # We also check if the images subdirectory exists
-        ASSETS_DIR.mkdir(exist_ok=True)
-        (ASSETS_DIR / "images").mkdir(exist_ok=True)
-        
-        if choice == "1":
-            cleanBuildDirs()
-            buildOnefile()
-        
-        elif choice == "2":
-            cleanBuildDirs()
-            buildOnedir()
-        
-        elif choice == "3":
-            cleanBuildDirs()
-            specFile = createSpecFile()
-            buildExecutable(specFile)
-        
-        else:
-            print("Invalid option")
-            return
-        
-        print("\n" + "=" * 60)
-        print("Build process completed successfully!")
-        print("=" * 60)
         
     except KeyboardInterrupt:
         print("\n\nBuild cancelled by user")
