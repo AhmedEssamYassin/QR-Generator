@@ -94,7 +94,7 @@ class QRGeneratorView(ctk.CTk):
         self.grid_rowconfigure(0, weight=1)
         
         # Left panel - Controls
-        leftPanel = ctk.CTkFrame(self, corner_radius=0)
+        leftPanel = ctk.CTkScrollableFrame(self, corner_radius=0, fg_color="transparent")
         leftPanel.grid(row=0, column=0, sticky="nsew", padx=(0, 1))
         
         # Right panel - Preview
