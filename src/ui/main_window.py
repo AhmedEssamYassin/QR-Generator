@@ -1,7 +1,9 @@
 import os
 import sys
 import tkinter as tk
-import customtkinter as ctk
+from tkinter import ttk, messagebox
+import ttkbootstrap as ttkb
+from ttkbootstrap.constants import *
 import logging
 from PIL import Image, ImageTk
 from typing import Dict
@@ -10,11 +12,13 @@ from core.models import QRType, QRStyle
 from ui.input_panel import InputPanel
 from ui.settings_panel import SettingsPanel
 from ui.preview_panel import PreviewPanel
+from ui.theme import FONTS, SPACING, TTK_THEME, TTK_THEME_DARK
 
 logger = logging.getLogger(__name__)
 
+
 def resourcePath(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
+    """Get absolute path to resource, works for dev and for PyInstaller"""
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
@@ -23,14 +27,58 @@ def resourcePath(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-class QRGeneratorView(ctk.CTk):
+
+class ScrollableFrame(ttk.Frame):
+    """A scrollable frame implementation for the left panel"""
+    
+    def __init__(self, parent, *args, **kwargs):
+        ttk.Frame.__init__(self, parent, *args, **kwargs)
+        
+        # Create canvas and scrollbar
+        self.canvas = tk.Canvas(self, highlightthickness=0)
+        self.scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.scrollableFrame = ttk.Frame(self.canvas)
+        
+        self.scrollableFrame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        )
+        
+        self.canvasFrame = self.canvas.create_window((0, 0), window=self.scrollableFrame, anchor="nw")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        
+        # Bind canvas width to frame width
+        self.canvas.bind('<Configure>', self._onCanvasConfigure)
+        
+        # Pack widgets
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
+        
+        # Mouse wheel binding
+        self.canvas.bind_all("<MouseWheel>", self._onMouseWheel)
+        
+    def _onCanvasConfigure(self, event):
+        """Ensure the scrollable frame width matches canvas width"""
+        self.canvas.itemconfig(self.canvasFrame, width=event.width)
+        
+    def _onMouseWheel(self, event):
+        """Handle mouse wheel scrolling"""
+        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+
+class QRGeneratorView(ttkb.Window):
     """Main application window"""
     
     def __init__(self, controller, settingsService):
-        super().__init__()
+        # Initialize ttkbootstrap window with theme
+        theme = settingsService.get("theme", "light")
+        themeName = TTK_THEME if theme == "light" else TTK_THEME_DARK
+        
+        super().__init__(themename=themeName)
         
         self.controller = controller
         self.settingsService = settingsService
+        self.currentTheme = theme
         
         # Window setup
         self.title("QR Code Generator Pro")
@@ -52,11 +100,6 @@ class QRGeneratorView(ctk.CTk):
         except Exception as e:
             logger.warning(f"Could not load icon: {e}")
         # -----------------------
-        
-        # Apply theme
-        theme = self.settingsService.get("theme", "light")
-        self.applyTheme(theme)
-        ctk.set_default_color_theme("blue")
         
         # Variables
         self.qrTypeVar = tk.StringVar(value=QRType.TEXT.value)
@@ -93,63 +136,67 @@ class QRGeneratorView(ctk.CTk):
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
         
-        # Left panel - Controls
-        leftPanel = ctk.CTkScrollableFrame(self, corner_radius=0, fg_color="transparent")
+        # Left panel - Scrollable Controls
+        leftPanel = ScrollableFrame(self)
         leftPanel.grid(row=0, column=0, sticky="nsew", padx=(0, 1))
         
         # Right panel - Preview
-        rightPanel = ctk.CTkFrame(self, corner_radius=0)
+        rightPanel = ttk.Frame(self)
         rightPanel.grid(row=0, column=1, sticky="nsew")
         
         # Status bar
-        self.statusBar = ctk.CTkLabel(
+        self.statusBar = ttk.Label(
             self,
             text="Ready",
             anchor="w",
-            height=30
+            relief="sunken",
+            font=FONTS['small']
         )
-        self.statusBar.grid(row=1, column=0, columnspan=2, sticky="ew", padx=10, pady=5)
+        self.statusBar.grid(row=1, column=0, columnspan=2, sticky="ew", padx=SPACING['md'], pady=SPACING['sm'])
         
-        # Create panels
-        self.inputPanel = InputPanel(leftPanel, self)
-        self.settingsPanel = SettingsPanel(leftPanel, self)
+        # Create panels - pass scrollableFrame as parent for left panel content
+        self.inputPanel = InputPanel(leftPanel.scrollableFrame, self)
+        self.settingsPanel = SettingsPanel(leftPanel.scrollableFrame, self)
         self.previewPanel = PreviewPanel(rightPanel, self)
         
         # Action buttons
-        self._createActionButtons(leftPanel)
+        self._createActionButtons(leftPanel.scrollableFrame)
     
     def _createActionButtons(self, parent) -> None:
         """Create action buttons"""
-        btnFrame = ctk.CTkFrame(parent, fg_color="transparent")
-        btnFrame.pack(fill="x", padx=10, pady=10)
+        btnFrame = ttk.Frame(parent)
+        btnFrame.pack(fill="x", padx=SPACING['md'], pady=SPACING['md'])
         
-        self.generateBtn = ctk.CTkButton(
+        self.generateBtn = ttk.Button(
             btnFrame,
             text="Generate QR",
             command=self.controller.generateQr,
-            height=40,
-            font=ctk.CTkFont(size=14, weight="bold")
+            style="primary.TButton",
+            width=20,
+            cursor="hand2"
         )
-        self.generateBtn.pack(fill="x", pady=(0, 10))
+        self.generateBtn.pack(fill="x", pady=(0, SPACING['md']), ipady=SPACING['sm'])
         
-        saveFrame = ctk.CTkFrame(btnFrame, fg_color="transparent")
+        saveFrame = ttk.Frame(btnFrame)
         saveFrame.pack(fill="x")
         
-        self.saveBtn = ctk.CTkButton(
+        self.saveBtn = ttk.Button(
             saveFrame,
             text="Save",
             command=self.controller.saveQr,
-            width=100,
-            state="disabled"
+            width=12,
+            state="disabled",
+            cursor="hand2"
         )
-        self.saveBtn.pack(side="left", padx=(0, 5))
+        self.saveBtn.pack(side="left", padx=(0, SPACING['sm']))
         
-        self.copyBtn = ctk.CTkButton(
+        self.copyBtn = ttk.Button(
             saveFrame,
             text="Copy",
             command=self.controller.copyToClipboard,
-            width=100,
-            state="disabled"
+            width=12,
+            state="disabled",
+            cursor="hand2"
         )
         self.copyBtn.pack(side="left")
     
@@ -176,12 +223,10 @@ class QRGeneratorView(ctk.CTk):
     
     def showError(self, title: str, message: str) -> None:
         """Show error dialog"""
-        from tkinter import messagebox
         messagebox.showerror(title, message)
     
     def showInfo(self, title: str, message: str) -> None:
         """Show info dialog"""
-        from tkinter import messagebox
         messagebox.showinfo(title, message)
     
     def updateColorButton(self, buttonType: str, color: str) -> None:
@@ -190,4 +235,7 @@ class QRGeneratorView(ctk.CTk):
 
     def applyTheme(self, themeName: str) -> None:
         """Apply the specified theme"""
-        ctk.set_appearance_mode(themeName)
+        self.currentTheme = themeName
+        # Switch ttkbootstrap theme
+        newTheme = TTK_THEME if themeName == "light" else TTK_THEME_DARK
+        self.style.theme_use(newTheme)

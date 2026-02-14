@@ -1,5 +1,6 @@
 import logging
 import os
+import subprocess
 import tempfile
 from datetime import datetime
 from tkinter import filedialog, colorchooser
@@ -129,6 +130,7 @@ class QRGeneratorController:
             filePath = filedialog.asksaveasfilename(
                 title="Save QR Code",
                 defaultextension=".png",
+                initialfile="QR.png",
                 filetypes=fileTypes,
                 initialdir=lastDir
             )
@@ -158,10 +160,26 @@ class QRGeneratorController:
                 self.model.currentQrImage.save(tmp.name, 'PNG')
                 tmpPath = tmp.name
             
-            self.view.showInfo("Info", "QR code image saved temporarily for clipboard")
+            # Robust Windows copy using PowerShell and Windows Forms
+            cmd = [
+                "powershell",
+                "-command",
+                f"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::SetImage([System.Drawing.Image]::FromFile('{tmpPath}'))"
+            ]
+            subprocess.run(cmd, creationflags=subprocess.CREATE_NO_WINDOW)
+            # -----------------------------------------------------------
+            
+            self.view.showInfo("Success", "QR code copied to clipboard!")
             self.view.updateStatus("Copied to clipboard")
             
-            os.unlink(tmpPath)
+            # Safely delete temp file after a short delay so the OS has time to finish reading it
+            def safeDelete():
+                try:
+                    os.unlink(tmpPath)
+                except OSError:
+                    pass
+                    
+            self.view.after(500, safeDelete)
             
         except Exception as e:
             errorMsg = f"Failed to copy to clipboard: {str(e)}"

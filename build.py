@@ -64,7 +64,7 @@ a = Analysis(
     ],
     hiddenimports=[
         'PIL._tkinter_finder',
-        'customtkinter',
+        'ttkbootstrap',
         'qrcode',
         'qrcode.image.styles.moduledrawers',
     ],
@@ -144,7 +144,7 @@ def buildOnefile():
         '--add-data', f'{QRCODE_PATH}{os.pathsep}qrcode',
         '--collect-all', 'qrcode', 
         '--hidden-import', 'PIL._tkinter_finder',
-        '--hidden-import', 'customtkinter',
+        '--hidden-import', 'ttkbootstrap',
         '--hidden-import', 'qrcode',
         '--hidden-import', 'qrcode.image.styles.moduledrawers',
     ]
@@ -180,7 +180,7 @@ def buildOnedir():
         '--add-data', f'{QRCODE_PATH}{os.pathsep}qrcode',
         '--collect-all', 'qrcode', 
         '--hidden-import', 'PIL._tkinter_finder',
-        '--hidden-import', 'customtkinter',
+        '--hidden-import', 'ttkbootstrap',
         '--hidden-import', 'qrcode',
         '--hidden-import', 'qrcode.image.styles.moduledrawers',
     ]

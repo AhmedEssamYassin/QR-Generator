@@ -4,7 +4,7 @@
 ![Python](https://img.shields.io/badge/python-3.x-yellow)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-A professional, feature-rich QR Code Generator desktop application built with Python and CustomTkinter. Create fully customizable QR codes for various purposes with a modern, user-friendly interface.
+A professional, feature-rich QR Code Generator desktop application built with Python and ttkbootstrap. Create fully customizable QR codes for various purposes with a modern, user-friendly interface.
 
 ## Features
 

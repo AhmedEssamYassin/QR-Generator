@@ -1,5 +1,7 @@
-import customtkinter as ctk
+import tkinter as tk
+from tkinter import ttk
 from PIL import Image, ImageTk
+from ui.theme import FONTS, SPACING
 
 
 class PreviewPanel:
@@ -9,36 +11,39 @@ class PreviewPanel:
         self.mainView = mainView
         
         # Title
-        title = ctk.CTkLabel(
+        title = ttk.Label(
             parent,
             text="Preview",
-            font=ctk.CTkFont(size=20, weight="bold")
+            font=FONTS['heading']
         )
-        title.pack(pady=20)
+        title.pack(pady=SPACING['xl'])
         
-        # Preview canvas
-        self.previewFrame = ctk.CTkFrame(
+        # Preview canvas - using Frame as container
+        self.previewFrame = ttk.Frame(
             parent,
             width=500,
-            height=500
+            height=500,
+            relief="solid",
+            borderwidth=1
         )
-        self.previewFrame.pack(expand=True, padx=20, pady=20)
+        self.previewFrame.pack(expand=True, padx=SPACING['xl'], pady=SPACING['xl'])
         self.previewFrame.pack_propagate(False)
         
-        self.previewLabel = ctk.CTkLabel(
+        self.previewLabel = ttk.Label(
             self.previewFrame,
             text="QR Code will appear here",
-            font=ctk.CTkFont(size=16)
+            font=FONTS['body'],
+            anchor="center"
         )
         self.previewLabel.pack(expand=True)
         
         # Info label
-        self.infoLabel = ctk.CTkLabel(
+        self.infoLabel = ttk.Label(
             parent,
             text="",
-            font=ctk.CTkFont(size=12)
+            font=FONTS['small']
         )
-        self.infoLabel.pack(pady=10)
+        self.infoLabel.pack(pady=SPACING['md'])
     
     def updateImage(self, image: Image.Image) -> None:
         """Update QR code preview with new image"""
@@ -49,7 +54,7 @@ class PreviewPanel:
         
         photo = ImageTk.PhotoImage(imgCopy)
         self.previewLabel.configure(image=photo, text="")
-        self.previewLabel.image = photo
+        self.previewLabel.image = photo  # Keep reference
         
         # Update info
         size = image.size

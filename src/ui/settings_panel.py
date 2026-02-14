@@ -1,5 +1,7 @@
-import customtkinter as ctk
+import tkinter as tk
+from tkinter import ttk
 from core.models import QRStyle
+from ui.theme import FONTS, SPACING, COLORS
 
 
 class SettingsPanel:
@@ -12,136 +14,148 @@ class SettingsPanel:
         self.settingsContent = self._createCollapsibleSection(parent, "Settings")
         
         # 1. Theme Toggle
-        themeFrame = ctk.CTkFrame(self.settingsContent, fg_color="transparent")
-        themeFrame.pack(fill="x", padx=5, pady=5)
-        ctk.CTkLabel(themeFrame, text="Theme:").pack(side="left")
-        ctk.CTkButton(
+        themeFrame = ttk.Frame(self.settingsContent)
+        themeFrame.pack(fill="x", padx=SPACING['sm'], pady=SPACING['sm'])
+        ttk.Label(themeFrame, text="Theme:", font=FONTS['body']).pack(side="left")
+        themeBtn = ttk.Button(
             themeFrame, 
             text="Switch Mode", 
             command=lambda: self.mainView.controller.toggleTheme(),
-            width=100,
-            height=24
-        ).pack(side="right")
+            width=15,
+            cursor="hand2"
+        )
+        themeBtn.pack(side="right")
         
         # 2. Error Correction
-        ecFrame = ctk.CTkFrame(self.settingsContent, fg_color="transparent")
-        ecFrame.pack(fill="x", padx=5, pady=5)
+        ecFrame = ttk.Frame(self.settingsContent)
+        ecFrame.pack(fill="x", padx=SPACING['sm'], pady=SPACING['sm'])
         
-        ctk.CTkLabel(ecFrame, text="Error Correction:").pack(side="left")
-        ctk.CTkOptionMenu(
+        ttk.Label(ecFrame, text="Error Correction:", font=FONTS['body']).pack(side="left")
+        ecMenu = ttk.Combobox(
             ecFrame,
-            variable=self.mainView.errorCorrectionVar,
+            textvariable=self.mainView.errorCorrectionVar,
             values=["LOW", "MEDIUM", "QUARTILE", "HIGH"],
-            width=120
-        ).pack(side="right")
-        
+            state="readonly",
+            width=15,
+            font=FONTS['body'],
+            cursor="hand2"
+        )
+        ecMenu.pack(side="right")
+        self._setComboboxCursor(ecMenu)
+
         # 3. Box Size
-        sizeFrame = ctk.CTkFrame(self.settingsContent, fg_color="transparent")
-        sizeFrame.pack(fill="x", padx=5, pady=5)
+        sizeFrame = ttk.Frame(self.settingsContent)
+        sizeFrame.pack(fill="x", padx=SPACING['sm'], pady=SPACING['sm'])
         
-        ctk.CTkLabel(sizeFrame, text="Box Size:").pack(side="left")
-        ctk.CTkSlider(
+        ttk.Label(sizeFrame, text="Box Size:", font=FONTS['body']).pack(side="left")
+        sizeSlider = ttk.Scale(
             sizeFrame,
             from_=5,
             to=20,
-            number_of_steps=15,
             variable=self.mainView.boxSizeVar,
-            width=150
-        ).pack(side="right")
+            orient="horizontal",
+            length=150,
+            cursor="hand2"
+        )
+        sizeSlider.pack(side="right")
         
         # 4. Border
-        borderFrame = ctk.CTkFrame(self.settingsContent, fg_color="transparent")
-        borderFrame.pack(fill="x", padx=5, pady=5)
+        borderFrame = ttk.Frame(self.settingsContent)
+        borderFrame.pack(fill="x", padx=SPACING['sm'], pady=SPACING['sm'])
         
-        ctk.CTkLabel(borderFrame, text="Border:").pack(side="left")
-        ctk.CTkSlider(
+        ttk.Label(borderFrame, text="Border:", font=FONTS['body']).pack(side="left")
+        borderSlider = ttk.Scale(
             borderFrame,
             from_=1,
             to=10,
-            number_of_steps=9,
             variable=self.mainView.borderVar,
-            width=150
-        ).pack(side="right")
+            orient="horizontal",
+            length=150,
+            cursor="hand2"
+        )
+        borderSlider.pack(side="right")
         
         # 5. Style
-        styleFrame = ctk.CTkFrame(self.settingsContent, fg_color="transparent")
-        styleFrame.pack(fill="x", padx=5, pady=(5, 10))
+        styleFrame = ttk.Frame(self.settingsContent)
+        styleFrame.pack(fill="x", padx=SPACING['sm'], pady=(SPACING['sm'], SPACING['md']))
         
-        ctk.CTkLabel(styleFrame, text="Style:").pack(side="left")
-        ctk.CTkOptionMenu(
+        ttk.Label(styleFrame, text="Style:", font=FONTS['body']).pack(side="left")
+        styleMenu = ttk.Combobox(
             styleFrame,
-            variable=self.mainView.styleVar,
+            textvariable=self.mainView.styleVar,
             values=[s.value for s in QRStyle],
-            width=150
-        ).pack(side="right")
-        
+            state="readonly",
+            width=15,
+            font=FONTS['body'],
+            cursor="hand2"
+        )
+        styleMenu.pack(side="right")
+        self._setComboboxCursor(styleMenu)
         # --- Colors Section ---
         self.colorsContent = self._createCollapsibleSection(parent, "Colors")
         
         # Foreground Color
-        fgFrame = ctk.CTkFrame(self.colorsContent, fg_color="transparent")
-        fgFrame.pack(fill="x", padx=5, pady=5)
+        fgFrame = ttk.Frame(self.colorsContent)
+        fgFrame.pack(fill="x", padx=SPACING['sm'], pady=SPACING['sm'])
         
-        ctk.CTkLabel(fgFrame, text="Foreground:").pack(side="left")
-        self.fgColorButton = ctk.CTkButton(
-            fgFrame,
-            text="",
-            width=60,
-            height=30,
-            fg_color=self.mainView.fgColorVar.get(),
-            command=lambda: self.mainView.controller.chooseColor("fg")
-        )
-        self.fgColorButton.pack(side="right")
+        ttk.Label(fgFrame, text="Foreground:", font=FONTS['body']).pack(side="left")
+
+        # Create a frame to hold the color button with canvas preview
+        fgButtonFrame = tk.Frame(fgFrame, relief="solid", borderwidth=1, cursor="hand2")
+        fgButtonFrame.pack(side="right")
+        fgButtonFrame.bind("<Button-1>", lambda e: self.mainView.controller.chooseColor("fg"))
+        
+        self.fgColorCanvas = tk.Canvas(fgButtonFrame, width=60, height=24, highlightthickness=0, cursor="hand2")
+        self.fgColorCanvas.pack()
+        self.fgColorCanvas.create_rectangle(0, 0, 60, 24, fill=self.mainView.fgColorVar.get(), outline="")
+        self.fgColorCanvas.bind("<Button-1>", lambda e: self.mainView.controller.chooseColor("fg"))
         
         # Background Color
-        bgFrame = ctk.CTkFrame(self.colorsContent, fg_color="transparent")
-        bgFrame.pack(fill="x", padx=5, pady=(5, 10))
+        bgFrame = ttk.Frame(self.colorsContent)
+        bgFrame.pack(fill="x", padx=SPACING['sm'], pady=(SPACING['sm'], SPACING['md']))
         
-        ctk.CTkLabel(bgFrame, text="Background:").pack(side="left")
-        self.bgColorButton = ctk.CTkButton(
-            bgFrame,
-            text="",
-            width=60,
-            height=30,
-            fg_color=self.mainView.bgColorVar.get(),
-            command=lambda: self.mainView.controller.chooseColor("bg")
-        )
-        self.bgColorButton.pack(side="right")
+        ttk.Label(bgFrame, text="Background:", font=FONTS['body']).pack(side="left")
+        
+        bgButtonFrame = tk.Frame(bgFrame, relief="solid", borderwidth=1, cursor="hand2")
+        bgButtonFrame.pack(side="right")
+        bgButtonFrame.bind("<Button-1>", lambda e: self.mainView.controller.chooseColor("bg"))
+        
+        self.bgColorCanvas = tk.Canvas(bgButtonFrame, width=60, height=24, highlightthickness=0, cursor="hand2")
+        self.bgColorCanvas.pack()
+        self.bgColorCanvas.create_rectangle(0, 0, 60, 24, fill=self.mainView.bgColorVar.get(), outline="")
+        self.bgColorCanvas.bind("<Button-1>", lambda e: self.mainView.controller.chooseColor("bg"))
+        
         
     def _createCollapsibleSection(self, parent, title):
         """Helper to create a collapsible frame with a header"""
-        container = ctk.CTkFrame(parent)
-        container.pack(fill="x", padx=10, pady=(0, 15))
+        container = ttk.LabelFrame(parent, text="", padding=0)
+        container.pack(fill="x", padx=SPACING['md'], pady=(0, SPACING['lg']))
         
         # State tracking - Set to False for collapsed by default
         isExpanded = [False] 
         
-        # Header Button - Create AND Pack FIRST to ensure it stays at top
-        headerBtn = ctk.CTkButton(
+        # Header Button
+        headerBtn = ttk.Button(
             container,
-            text=f"{title} ▶",  # Default arrow for collapsed
-            fg_color="transparent",
-            text_color=("gray10", "gray90"),
-            hover_color=("gray70", "gray30"),
-            anchor="w",
-            font=ctk.CTkFont(size=14, weight="bold"),
-            height=30,
-            cursor="hand2"  # Change cursor on hover
+            text=f"▶ {title}",  # Default arrow for collapsed
+            command=None,  # Will be set in toggle function
+            style="Flat.TButton",
+            cursor="hand2"
         )
         headerBtn.pack(fill="x", padx=2, pady=2, side="top")
         
-        # Content frame - Create second
-        contentFrame = ctk.CTkFrame(container, fg_color="transparent")
+        # Content frame
+        contentFrame = ttk.Frame(container)
         # NOTE: We do NOT pack contentFrame here, so it starts hidden
         
         def toggle():
             if isExpanded[0]:
                 contentFrame.pack_forget()
-                headerBtn.configure(text=f"{title} ▶")
+                headerBtn.configure(text=f"▶ {title}")
                 isExpanded[0] = False
             else:
-                contentFrame.pack(fill="x", padx=5, pady=5)
-                headerBtn.configure(text=f"{title} ▼")
+                contentFrame.pack(fill="x", padx=SPACING['sm'], pady=SPACING['sm'])
+                headerBtn.configure(text=f"▼ {title}")
                 isExpanded[0] = True
         
         headerBtn.configure(command=toggle)
@@ -151,6 +165,23 @@ class SettingsPanel:
     def updateColorButton(self, buttonType: str, color: str) -> None:
         """Update color button appearance"""
         if buttonType == "fg":
-            self.fgColorButton.configure(fg_color=color)
+            # Clear canvas and redraw with new color
+            self.fgColorCanvas.delete("all")
+            self.fgColorCanvas.create_rectangle(0, 0, 60, 24, fill=color, outline="")
         else:
-            self.bgColorButton.configure(fg_color=color)
+            # Clear canvas and redraw with new color
+            self.bgColorCanvas.delete("all")
+            self.bgColorCanvas.create_rectangle(0, 0, 60, 24, fill=color, outline="")
+
+
+    def _setComboboxCursor(self, combobox):
+        """Set hand cursor on all parts of combobox including dropdown arrow"""
+        try:
+            # Bind cursor to enter/leave events for the entire combobox
+            combobox.bind('<Enter>', lambda e: combobox.config(cursor='hand2'))
+            # Also set cursor on all child widgets (including the dropdown button)
+            for child in combobox.winfo_children():
+                child.configure(cursor='hand2')
+        except:
+            pass  # Ignore if unable to set cursor on some widgets
+        
